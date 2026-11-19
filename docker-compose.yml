@@ -1,0 +1,133 @@
+version: '3.8'
+
+services:
+  # ------------------------------------------------------
+  # Database: PostgreSQL
+  # ------------------------------------------------------
+  postgres:
+    image: postgres:15-alpine
+    container_name: cloudvault_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-cloudvault_db}
+      POSTGRES_USER: ${POSTGRES_USER:-cloudvault_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-cloudvault_secure_password_123}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-cloudvault_user} -d ${POSTGRES_DB:-cloudvault_db}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - cloudvault_network
+
+  # ------------------------------------------------------
+  # Object Storage: MinIO (S3-Compatible)
+  # ------------------------------------------------------
+  minio:
+    image: minio/minio:RELEASE.2023-09-07T02-05-02Z
+    container_name: cloudvault_minio
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-miniopassword123}
+    volumes:
+      - minio_data:/data
+    ports:
+      - "9000:9000" # S3 API
+      - "9001:9001" # MinIO Web Console
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+    networks:
+      - cloudvault_network
+
+  # ------------------------------------------------------
+  # MinIO Bucket Auto-Provisioning
+  # ------------------------------------------------------
+  minio-init:
+    image: minio/mc:latest
+    container_name: cloudvault_minio_init
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c "
+      /usr/bin/mc alias set myminio http://minio:9000 ${MINIO_ROOT_USER:-minioadmin} ${MINIO_ROOT_PASSWORD:-miniopassword123};
+      /usr/bin/mc mb --ignore-existing myminio/${MINIO_DEFAULT_BUCKET:-cloudvault-data};
+      /usr/bin/mc anonymous set download myminio/${MINIO_DEFAULT_BUCKET:-cloudvault-data};
+      exit 0;
+      "
+    networks:
+      - cloudvault_network
+
+  # ------------------------------------------------------
+  # Backend API Service
+  # ------------------------------------------------------
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: cloudvault_backend
+    restart: unless-stopped
+    env_file:
+      - .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+    networks:
+      - cloudvault_network
+
+  # ------------------------------------------------------
+  # Frontend Web Client
+  # ------------------------------------------------------
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: cloudvault_frontend
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    networks:
+      - cloudvault_network
+
+  # ------------------------------------------------------
+  # Reverse Proxy: Nginx
+  # ------------------------------------------------------
+  nginx:
+    image: nginx:alpine
+    container_name: cloudvault_nginx
+    restart: unless-stopped
+    ports:
+      - "${NGINX_PORT:-80}:80"
+    volumes:
+      - ./infra/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - frontend
+      - backend
+      - minio
+    networks:
+      - cloudvault_network
+
+volumes:
+  postgres_data:
+    driver: local
+  minio_data:
+    driver: local
+
+networks:
+  cloudvault_network:
+    driver: bridge
