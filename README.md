@@ -3,8 +3,8 @@
 
 # CloudVault - Hệ thống Cloud Data Storage
 
-[![Status](https://img.shields.io/badge/status-in%20development-orange?style=flat-square)](https://github.com/<OWNER>/<REPO>)
-[![Course](https://img.shields.io/badge/course-Cloud%20Computing-blue?style=flat-square)](https://github.com/<OWNER>/<REPO>)
+[![Status](https://img.shields.io/badge/status-in%20development-orange?style=flat-square)](https://github.com/num153/cloudvault)
+[![Course](https://img.shields.io/badge/course-Cloud%20Computing-blue?style=flat-square)](https://github.com/num153/cloudvault)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green?style=flat-square)](LICENSE)
 [![Python](https://img.shields.io/badge/Python-3776AB?style=flat-square&logo=python&logoColor=white)](https://www.python.org/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=flat-square&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
@@ -15,9 +15,9 @@
 [![Docker](https://img.shields.io/badge/Docker-2496ED?style=flat-square&logo=docker&logoColor=white)](https://www.docker.com/)
 [![Nginx](https://img.shields.io/badge/Nginx-009639?style=flat-square&logo=nginx&logoColor=white)](https://nginx.org/)
 [![AWS](https://img.shields.io/badge/AWS-Learner%20Lab-232F3E?style=flat-square&logo=amazon-aws&logoColor=white)](https://aws.amazon.com/)
-<!-- TODO: CI badge - Thêm badge GitHub Actions khi tạo workflow: [![CI](https://img.shields.io/github/actions/workflow/status/<OWNER>/<REPO>/ci.yml?branch=main&style=flat-square)](https://github.com/<OWNER>/<REPO>/actions) -->
+<!-- TODO: CI badge - Thêm badge GitHub Actions khi tạo workflow: [![CI](https://img.shields.io/github/actions/workflow/status/num153/cloudvault/ci.yml?branch=main&style=flat-square)](https://github.com/num153/cloudvault/actions) -->
 
-> **Lưu ý:** Thay thế `<OWNER>/<REPO>` trong các liên kết badge bằng đường dẫn repository GitHub thực tế của nhóm. Giấy phép hiện để mặc định là MIT, nhóm có thể điều chỉnh theo quy định môn học.
+> **Lưu ý:** Repository GitHub chính thức của nhóm tại [github.com/num153/cloudvault](https://github.com/num153/cloudvault). Giấy phép hiện để mặc định là MIT, nhóm có thể điều chỉnh theo quy định môn học.
 
 ---
 
@@ -92,15 +92,15 @@ Hệ thống được thiết kế theo mô hình tách biệt dữ liệu:
 ```mermaid
 flowchart TD
     User([Client / Browser]) -->|HTTP / HTTPS: 80, 443| Nginx[Nginx Reverse Proxy]
-    
-    Nginx -->|/ (Static / App)| Frontend[Frontend: React Vite]
-    Nginx -->|/api/*| Backend[Backend: FastAPI]
-    
+
+    Nginx -->|"/ (Static / App)"| Frontend[Frontend: React Vite]
+    Nginx -->|"/api/*"| Backend[Backend: FastAPI]
+
     Backend -->|Metadata, Users, Billing, Metering| Postgres[(PostgreSQL)]
     Backend -->|Generate Presigned URL / SDK API| MinIO[(MinIO Object Storage)]
-    
+
     User -.->|Upload / Download trực tiếp qua Presigned URL| MinIO
-```
+``` 
 
 ### 3.2. Sơ đồ luồng Upload tệp bằng Presigned URL
 
@@ -190,7 +190,7 @@ Thực hiện các bước sau để khởi chạy toàn bộ hệ thống bằn
 
 1. **Clone mã nguồn:**
    ```bash
-   git clone https://github.com/<OWNER>/<REPO>.git
+   git clone https://github.com/num153/cloudvault.git
    cd cloudvault
    ```
 
