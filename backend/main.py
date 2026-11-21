@@ -6,6 +6,8 @@ from sqlalchemy.orm import declarative_base, sessionmaker, Session
 import boto3
 
 DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://cloudvault_user:cloudvault_secure_password_123@postgres:5432/cloudvault_db")
+if DATABASE_URL.startswith("postgresql://"):
+    DATABASE_URL = DATABASE_URL.replace("postgresql://", "postgresql+psycopg2://", 1)
 S3_ENDPOINT = os.getenv("S3_ENDPOINT", "http://minio:9000")
 S3_ACCESS_KEY = os.getenv("S3_ACCESS_KEY", "minioadmin")
 S3_SECRET_KEY = os.getenv("S3_SECRET_KEY", "miniopassword123")
