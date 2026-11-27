@@ -17,3 +17,7 @@ class User(Base):
     subscriptions = relationship("Subscription", back_populates="user")
     files = relationship("FileItem", back_populates="user")
     invoices = relationship("Invoice", back_populates="user")
+
+    @property
+    def storage_prefix(self) -> str:
+        return f"user_{self.id}/"
